@@ -1,7 +1,10 @@
 from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
 from huggingface_hub import login
+from src.finetune import data, model_utils
+from src.finetune.data import TTSDataCollatorWithPadding
 
-def main():
+
+def set_up_trainer(model, dataset, data_collator, processor):
     training_args = Seq2SeqTrainingArguments(
         output_dir="speecht5_finetuned_voxpopuli_nl",  # change to a repo name of your choice
         per_device_train_batch_size=4,
@@ -31,10 +34,20 @@ def main():
         data_collator=data_collator,
         tokenizer=processor,
     )
+
     return trainer
 
 if __name__ == "__main__":
-    login(token="hf_xxx") <- set here your hf token to upload the model into the hub
-    trainer = main()
+    login(token="hf_key") # <- set here your hf token to upload the model into the hub
+    checkpoint = "microsoft/speecht5_tts"
+    # Get model, tokenizer and processor
+    model = model_utils.load_model(checkpoint)
+    processor, tokenizer = model_utils.load_processor_tokenizer(checkpoint)
+    # Get dataset
+    dataset = data.get_dataset()
+    # Get data collator
+    data_collator = TTSDataCollatorWithPadding(processor=processor)
+    # SET UP trainner
+    trainer = set_up_trainer(model, dataset, data_collator, processor)
     trainer.train()
     trainer.push_to_hub()

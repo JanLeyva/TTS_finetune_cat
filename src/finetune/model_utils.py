@@ -1,7 +1,7 @@
 # load processor and model
-from transformers import SpeechT5Processor, SpeechT5ForTextToSpeech, Seq2SeqTrainingArguments
+from transformers import SpeechT5Processor, SpeechT5ForTextToSpeech
+from functools import partial
 
-checkpoint = "microsoft/speecht5_tts"
 def load_processor_tokenizer(checkpoint):
 	processor = SpeechT5Processor.from_pretrained(checkpoint)
 	tokenizer = processor.tokenizer

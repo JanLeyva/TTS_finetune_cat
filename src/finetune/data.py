@@ -12,29 +12,40 @@ def get_dataset():
     """
     # "audio", "transcription" <- This will be the default columns
     dataset_openslr = load_dataset("projecte-aina/openslr-slr69-ca-trimmed-denoised")
+    print("Downloaded dataset_openslr")
     #  dataset_openslr "audio", "sentence", "speaker_id"
     dataset_parlament_parla = load_dataset("projecte-aina/parlament_parla", "clean")
     dataset_parlament_parla = dataset_parlament_parla.rename_column("sentence", "transcription")
     dataset_parlament_parla = dataset_parlament_parla.select_columns(["audio", "transcription"])
+    print("Downloaded dataset_parlament_parla")
     # "audio", "transcription"
-    dataset_festcat_trimmed_denoised = load_dataset("pprojecte-aina/festcat_trimmed_denoised")
-    dataset_festcat_trimmed_denoised = dataset_festcat_trimmed_denoised.select_columns(["audio", "transcription"])
-    # "audio", "sentence"
-    dataset_cv_13 = load_dataset("mozilla-foundation/common_voice_13_0", "ca", split=["train", "test"])
-    dataset_cv_13.rename_column("sentence", "transcription")
-    dataset_cv_13 = dataset_cv_13.select_columns(["audio", "transcription"])
+    # dataset_festcat_trimmed_denoised = load_dataset("pprojecte-aina/festcat_trimmed_denoised")
+    # dataset_festcat_trimmed_denoised = dataset_festcat_trimmed_denoised.select_columns(["audio", "transcription"])
+    # print("Downloaded dataset_festcat_trimmed_denoised")
+    # # "audio", "sentence"
+    # dataset_cv_13 = load_dataset("mozilla-foundation/common_voice_13_0", "ca", split=["train", "test"])
+    # dataset_cv_13.rename_column("sentence", "transcription")
+    # dataset_cv_13 = dataset_cv_13.select_columns(["audio", "transcription"])
+    # print("Downloaded dataset_cv_13")
 
     # concatenate the datasets
-    dataset = concatenate_datasets(
-        [dataset_openslr, dataset_parlament_parla, dataset_festcat_trimmed_denoised, dataset_cv_13]
+    dataset_train = concatenate_datasets(
+        [dataset_openslr["train"], dataset_parlament_parla["train"]]
     )
-
+    # dataset_test = concatenate_datasets(
+    #     [dataset_openslr["test"], dataset_parlament_parla["test"]]
+    # )
+    dataset_test = dataset_parlament_parla["test"]
+    print("Dataset concatenated!!")
     # we must re-sample to 16 Khz from 22Khz
-    dataset = dataset.cast_column("audio", Audio(sampling_rate=16000))
+    dataset_train = dataset_train.cast_column("audio", Audio(sampling_rate=16000))
+    dataset_test = dataset_test.cast_column("audio", Audio(sampling_rate=16000))
+    print("Dataset transformed to 16 Khz!!")
 
     # transform and clean dataset
-    dataset = data_transform(dataset)
-    return dataset
+    dataset_train = data_transform(dataset_train)
+    dataset_test = data_transform(dataset_test)
+    return dataset_train, dataset_test
 
 
 

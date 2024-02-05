@@ -4,7 +4,7 @@ from src.finetune import data, model_utils
 from src.finetune.data import TTSDataCollatorWithPadding
 
 
-def set_up_trainer(model, dataset, data_collator, processor):
+def set_up_trainer(model, dataset_train, dataset_test, data_collator, processor):
     training_args = Seq2SeqTrainingArguments(
         output_dir="speecht5_finetuned_voxpopuli_nl",  # change to a repo name of your choice
         per_device_train_batch_size=4,
@@ -24,13 +24,14 @@ def set_up_trainer(model, dataset, data_collator, processor):
         greater_is_better=False,
         label_names=["labels"],
         push_to_hub=True,
+        remove_unused_columns=False, # we may need it
     )
 
     trainer = Seq2SeqTrainer(
         args=training_args,
         model=model,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["test"],
+        train_dataset=dataset_train,
+        eval_dataset=dataset_test,
         data_collator=data_collator,
         tokenizer=processor,
     )
@@ -38,16 +39,16 @@ def set_up_trainer(model, dataset, data_collator, processor):
     return trainer
 
 if __name__ == "__main__":
-    login(token="hf_key") # <- set here your hf token to upload the model into the hub
+    login(token="paste_here_api_key") # <- set here your hf token to upload the model into the hub
     checkpoint = "microsoft/speecht5_tts"
     # Get model, tokenizer and processor
     model = model_utils.load_model(checkpoint)
     processor, tokenizer = model_utils.load_processor_tokenizer(checkpoint)
     # Get dataset
-    dataset = data.get_dataset()
+    dataset_train, dataset_test = data.get_dataset()
     # Get data collator
     data_collator = TTSDataCollatorWithPadding(processor=processor)
     # SET UP trainner
-    trainer = set_up_trainer(model, dataset, data_collator, processor)
+    trainer = set_up_trainer(model, dataset_train, dataset_test, data_collator, processor)
     trainer.train()
     trainer.push_to_hub()
